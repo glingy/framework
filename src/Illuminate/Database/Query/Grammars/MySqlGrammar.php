@@ -195,6 +195,48 @@ class MySqlGrammar extends Grammar
 
         return "{$field} = json_set({$field}{$path}, {$value})";
     }
+    
+    /**
+	 * Compile the "offset" portions of the query.
+	 *
+	 * @param  \Illuminate\Database\Query\Builder  $query
+	 * @param  int  $offset
+	 * @return string
+	 */
+	protected function compileOffset(Builder $query, $offset)
+	{
+		if ($query->limit) return '';
+		return 'offset '.(int) $offset;
+	}
+
+	/**
+	 * Compile the "union" queries attached to the main query.
+	 *
+	 * @param  \Illuminate\Database\Query\Builder  $query
+	 * @return string
+	 */
+	protected function compileUnions(Builder $query)
+	{
+		$sql = '';
+
+		foreach ($query->unions as $union) {
+			$sql .= $this->compileUnion($union);
+		}
+
+		if (! empty($query->unionOrders)) {
+			$sql .= ' '.$this->compileOrders($query, $query->unionOrders);
+		}
+
+		if (isset($query->unionLimit)) {
+			$sql .= ' '.$this->compileLimit($query, $query->unionLimit);
+
+			if (isset($query->unionOffset)) {
+				$sql .= ' '.$this->compileOffset($query, $query->unionOffset);
+			}
+		}
+
+		return ltrim($sql);
+	}
 
     /**
      * Compile an update statement without joins into SQL.
