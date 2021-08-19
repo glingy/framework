@@ -205,7 +205,7 @@ class MySqlGrammar extends Grammar
 	 */
 	protected function compileOffset(Builder $query, $offset)
 	{
-		if ($query->limit) return '';
+		if (!isset($query->limit)) return '';
 		return 'offset '.(int) $offset;
 	}
 
